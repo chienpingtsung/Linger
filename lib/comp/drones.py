@@ -56,15 +56,21 @@ class Drone:
         await self.drone.action.disarm()
         print('✅ Disarmed.')
 
-    async def offboard_ctrl(self):
-        while self.offboard:
-            await self.drone.offboard.set_velocity_body(VelocityBodyYawspeed(**self.v))
+    def reset_v(self):
+        self.v.f = 0
+        self.v.r = 0
+        self.v.d = 0
+        self.v.y = 0
+
+    async def set_velocity_body(self):
+        await self.drone.offboard.set_velocity_body(VelocityBodyYawspeed(**self.v))
 
     async def start_offboard(self):
         if await self.drone.offboard.is_active():
             return
 
-        self.set_v(0, 0, 0, 0)
+        self.reset_v()
+        await self.set_velocity_body()
 
         try:
             print('⚠️ Starting offboard.')
@@ -77,7 +83,8 @@ class Drone:
         if not await self.drone.offboard.is_active():
             return
 
-        self.set_v(0, 0, 0, 0)
+        self.reset_v()
+        await self.set_velocity_body()
 
         try:
             print('ℹ️ Stopping offboad.')
