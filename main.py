@@ -41,6 +41,11 @@ class Main:
                 self.window = False
         cv2.destroyAllWindows()
 
+    async def moni_battery(self):
+        async for b in self.drone.drone.telemetry.battery():
+            print(b.remaining_percent)
+            await asyncio.sleep(1)
+
     async def __call__(self):
         await self.drone.connect()
 
