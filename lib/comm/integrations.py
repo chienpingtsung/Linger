@@ -21,7 +21,23 @@ class IntegrationCommander:
         self.text = config.text
 
     async def routing(self):
-        pass
+        for waypoint, perspectives in zip(self.waypoints, self.perspectives):
+            self.drone.p.lat = waypoint[0]
+            self.drone.p.lon = waypoint[1]
+            self.drone.p.alt = waypoint[2]
+            self.drone.p.yaw = 0
+            async for p in self.drone.drone.telemetry.position():
+                if perspectives:
+                    if ((p.latitude_deg - waypoint[0]) ** 2 + (p.longitude_deg - waypoint[1]) ** 2 + (
+                            p.absolute_altitude_m - waypoint[2]) ** 2) ** 0.5 < config.abs_dis:
+                        roi = perspectives.pop()
+                        self.drone.roi.lat = roi[0]
+                        self.drone.roi.lon = roi[1]
+                        self.drone.roi.alt = roi[2]
+                        await asyncio.sleep(config.shoot_t)
+                    continue
+                break
+        self.in_ctl = False
 
     async def tracking(self):
         self.in_processing = True
@@ -54,15 +70,18 @@ class IntegrationCommander:
         self.in_ctl = True
 
         await self.drone.start_offboard()
+        routing = asyncio.create_task(self.routing())
         tracking = asyncio.create_task(self.tracking())
 
         while self.in_ctl:
             if self.tracking:
                 await self.drone.set_velocity_body()
+                await self.drone.set_pitch_and_yaw(-70, 0)
             else:
                 await self.drone.set_position_global()
                 await self.drone.set_roi_location()
 
         self.in_processing = False
+        await routing
         await tracking
         await self.drone.stop_offboard()
