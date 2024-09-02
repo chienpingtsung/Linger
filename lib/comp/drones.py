@@ -1,6 +1,6 @@
 from easydict import EasyDict
 from mavsdk import System
-from mavsdk.offboard import VelocityBodyYawspeed, OffboardError
+from mavsdk.offboard import VelocityBodyYawspeed, OffboardError, PositionGlobalYaw
 from mavsdk.telemetry import LandedState
 
 from lib.util.config import config
@@ -12,6 +12,7 @@ class Drone:
 
         self.offboard = False
         self.v = EasyDict({'f': 0, 'r': 0, 'd': 0, 'y': 0})
+        self.p = EasyDict({'lat': None, 'lon': None, 'alt': None, 'yaw': None, 'type': 1})
 
     async def connect(self):
         print('ℹ️ Connecting the drone.')
@@ -64,6 +65,9 @@ class Drone:
 
     async def set_velocity_body(self):
         await self.drone.offboard.set_velocity_body(VelocityBodyYawspeed(**self.v))
+
+    async def set_position_global(self):
+        await self.drone.offboard.set_position_global(PositionGlobalYaw(**self.p))
 
     async def start_offboard(self):
         if await self.drone.offboard.is_active():
