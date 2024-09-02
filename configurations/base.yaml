@@ -1,0 +1,17 @@
+cam_src: 'rtsp://192.168.144.25:8554/main.264'
+text: 'Person.'
+abs_dis: 0.00002
+shoot_t: 3
+force_cpu: False
+ep_area: 0.03
+model: 'IDEA-Research/grounding-dino-tiny'
+box_threshold: 0.3
+text_threshold: 0.3
+max_trk_hor_speed: 2
+max_trk_ver_speed: 2
+kb_ctl_ls: 0.5
+kb_ctl_ys: 15
+system_address: '/dev/ttyUSB0:57600'
+altitude: 15
+waypoints: '?'
+perspectives: '?'
