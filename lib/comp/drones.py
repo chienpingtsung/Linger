@@ -75,6 +75,9 @@ class Drone:
         if self.roi.lat is not None:
             await self.drone.gimbal.set_roi_location(**self.roi)
 
+    async def set_pitch_and_yaw(self, pitch, yaw):
+        await self.drone.gimbal.set_pitch_and_yaw(pitch, yaw)
+
     async def start_offboard(self):
         if await self.drone.offboard.is_active():
             return
