@@ -13,6 +13,7 @@ class Drone:
         self.offboard = False
         self.v = EasyDict({'f': 0, 'r': 0, 'd': 0, 'y': 0})
         self.p = EasyDict({'lat': None, 'lon': None, 'alt': None, 'yaw': None, 'type': 1})
+        self.roi = EasyDict({'lat': None, 'lon': None, 'alt': None})
 
     async def connect(self):
         print('ℹ️ Connecting the drone.')
@@ -67,7 +68,12 @@ class Drone:
         await self.drone.offboard.set_velocity_body(VelocityBodyYawspeed(**self.v))
 
     async def set_position_global(self):
-        await self.drone.offboard.set_position_global(PositionGlobalYaw(**self.p))
+        if self.p.lat is not None:
+            await self.drone.offboard.set_position_global(PositionGlobalYaw(**self.p))
+
+    async def set_roi_location(self):
+        if self.roi.lat is not None:
+            await self.drone.gimbal.set_roi_location(**self.roi)
 
     async def start_offboard(self):
         if await self.drone.offboard.is_active():
