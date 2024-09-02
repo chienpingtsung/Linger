@@ -19,6 +19,7 @@ class IntegrationCommander:
         self.in_processing = False
 
         self.text = config.text
+        self.box = None
 
     async def routing(self):
         for waypoint, perspectives in zip(self.waypoints, self.perspectives):
@@ -53,13 +54,13 @@ class IntegrationCommander:
                     continue
                 self.in_tracking = True
 
-                box = rst['boxes'][torch.argmax(rst['scores'])].tolist()
+                self.box = rst['boxes'][torch.argmax(rst['scores'])].tolist()
 
                 w, h = frame.size
-                dcx = (box[0] + box[2]) / (2 * w) - 0.5
-                dcy = 0.5 - (box[1] + box[3]) / (2 * h)
-                bw = (box[2] - box[0]) / w
-                bh = (box[3] - box[1]) / h
+                dcx = (self.box[0] + self.box[2]) / (2 * w) - 0.5
+                dcy = 0.5 - (self.box[1] + self.box[3]) / (2 * h)
+                bw = (self.box[2] - self.box[0]) / w
+                bh = (self.box[3] - self.box[1]) / h
                 darea = config.ep_area - bw * bh
 
                 self.drone.v.f = 2 * dcy * config.max_trk_hor_speed
