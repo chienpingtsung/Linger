@@ -4,12 +4,12 @@ from pathlib import Path
 import cv2
 import pandas
 
-from lib.comm.integrations import IntegrationCommander
-from lib.comp.cam import Camera
-from lib.comp.drones import Drone
-from lib.models.groundingdino import GroundingDINO
-from lib.util.config import config
-from lib.util.images import cv_to_pil, add_box_mask, pil_to_cv
+from pkg.comm.integrations import IntegrationCommander
+from pkg.comp.cam import Camera
+from pkg.comp.drones import Drone
+from pkg.models.groundingdino import GroundingDINO
+from pkg.utils.config import cfg
+from pkg.utils.images import cv_to_pil, add_box_mask, pil_to_cv
 
 
 class Main:
@@ -18,9 +18,9 @@ class Main:
         self.camera = Camera()
         self.model = GroundingDINO()
 
-        self.waypoints = pandas.read_csv(config.waypoints, header=None).to_numpy()
+        self.waypoints = pandas.read_csv(cfg.waypoints, header=None).to_numpy()
         self.perspectives = [
-            pandas.read_csv(Path(config.perspectives).joinpath(f'{i}.csv'), header=None).to_numpy().tolist() for i in
+            pandas.read_csv(Path(cfg.perspectives).joinpath(f'{i}.csv'), header=None).to_numpy().tolist() for i in
             range(len(self.waypoints))]
 
         self.commander = IntegrationCommander(self.drone, self.camera, self.model, self.waypoints, self.perspectives)
@@ -59,6 +59,6 @@ class Main:
 
 
 if __name__ == '__main__':
-    config.load('configurations/base.yaml')
+    cfg.load('configurations/base.yaml')
     main = Main()
     asyncio.run(main())
