@@ -12,6 +12,12 @@ max_trk_ver_speed: 2
 kb_ctl_ls: 0.5
 kb_ctl_ys: 15
 system_address: '/dev/ttyUSB0:57600'
-altitude: 15
+
 waypoints: '?'
 perspectives: '?'
+
+
+
+min_bat_life: 0.5
+takeoff_altitude: 15
+

@@ -2,8 +2,8 @@ import asyncio
 
 import torch
 
-from lib.util.config import config
-from lib.util.images import cv_to_pil
+from pkg.utils.config import cfg
+from pkg.utils.images import cv_to_pil
 
 
 class IntegrationCommander:
@@ -75,7 +75,7 @@ class IntegrationCommander:
         tracking = asyncio.create_task(self.tracking())
 
         while self.in_ctl:
-            if self.tracking:
+            if self.in_tracking:
                 await self.drone.set_velocity_body()
                 await self.drone.set_pitch_and_yaw(-70, 0)
             else:
