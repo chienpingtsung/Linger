@@ -2,12 +2,11 @@ from threading import Thread
 
 import cv2
 
-from lib.util.config import config
 
+class CameraController:
+    def __init__(self, source):
+        self.capture = cv2.VideoCapture(source)
 
-class Camera:
-    def __init__(self):
-        self.capture = cv2.VideoCapture(config.cam_src)
         self.status = None
         self.frame = None
 
