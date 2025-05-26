@@ -1,5 +1,6 @@
 import asyncio
 
+from easydict import EasyDict
 from mavsdk.gimbal import ControlMode, GimbalMode, SendMode
 
 from pkg.sys.drone import DroneController
@@ -10,6 +11,9 @@ class GimbalController:
 
     def __init__(self, drone: DroneController):
         self.gimbal = drone.drone.gimbal
+
+        self.roi = EasyDict({'latitude_deg': None, 'longitude_deg': None, 'altitude_m': None})
+        self.ang = EasyDict({'roll_deg': None, 'pitch_deg': None, 'yaw_deg': None})
 
         print('[INFO] Searching gimbal...')
         async for gimbal_list in self.gimbal.gimbal_list():
@@ -28,12 +32,27 @@ class GimbalController:
 
     async def check_gimbal(self):
         print('[ACTION] Checking gimbal...')
-        await self.set_roi_location(38.98665259811101, 117.3428250578938, 0)
+        self.set_roi_location(38.98665259811101, 117.3428250578938, 0)
+        await self.control_roi_location()
         await asyncio.sleep(3)
-        await self.set_angles(0, 0, 0)
+        self.set_angles(0, 0, 0)
+        await self.control_angles()
 
-    async def set_roi_location(self, latitude_deg, longitude_deg, altitude_m):
-        await self.gimbal.set_roi_location(self.gimbal_id, latitude_deg, longitude_deg, altitude_m)
+    def set_roi_location(self, latitude_deg, longitude_deg, altitude_m):
+        self.roi.latitude_deg = latitude_deg
+        self.roi.longitude_deg = longitude_deg
+        self.roi.altitude_m = altitude_m
 
-    async def set_angles(self, roll_deg, pitch_deg, yaw_deg):
-        await self.gimbal.set_angles(self.gimbal_id, roll_deg, pitch_deg, yaw_deg, GimbalMode.YAW_FOLLOW, SendMode.ONCE)
+    def set_angles(self, roll_deg, pitch_deg, yaw_deg):
+        self.ang.roll_deg = roll_deg
+        self.ang.pitch_deg = pitch_deg
+        self.ang.yaw_deg = yaw_deg
+
+    async def control_roi_location(self):
+        await self.gimbal.set_roi_location(self.gimbal_id, **self.roi)
+
+    async def control_angles(self):
+        await self.gimbal.set_angles(gimbal_id=self.gimbal_id,
+                                     gimbal_mode=GimbalMode.YAW_FOLLOW,
+                                     SendMode=SendMode.ONCE,
+                                     **self.ang)
