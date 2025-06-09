@@ -1,29 +1,28 @@
 import asyncio
-from pathlib import Path
+import json
 
 import cv2
-import pandas
 
-from pkg.comm.integrations import IntegrationCommander
-from pkg.comp.cam import Camera
-from pkg.comp.drones import Drone
-from pkg.models.groundingdino import GroundingDINO
+from pkg.algorithm.groundingdino import GroundingDINO
+from pkg.commander.retrieve import RetrieveCommander
+from pkg.sys.camera import CameraController
+from pkg.sys.drone import DroneController
+from pkg.sys.gimbal import GimbalController
 from pkg.utils.config import cfg
-from pkg.utils.images import cv_to_pil, add_box_mask, pil_to_cv
+from pkg.utils.image import cv_to_pil, draw_box_mask, pil_to_cv
 
 
 class Main:
     def __init__(self):
-        self.drone = Drone()
-        self.camera = Camera()
+        self.drone = DroneController()
+        self.gimbal = GimbalController(self.drone)
+        self.camera = CameraController(cfg.camera_src)
         self.model = GroundingDINO()
 
-        self.waypoints = pandas.read_csv(cfg.waypoints, header=None).to_numpy()
-        self.perspectives = [
-            pandas.read_csv(Path(cfg.perspectives).joinpath(f'{i}.csv'), header=None).to_numpy().tolist() for i in
-            range(len(self.waypoints))]
+        with open('waypoints.json', 'r', encoding='utf-8') as f:
+            self.waypoints = json.load(f)
 
-        self.commander = IntegrationCommander(self.drone, self.camera, self.model, self.waypoints, self.perspectives)
+        self.commander = RetrieveCommander(self.drone, self.gimbal, self.camera, self.model, self.waypoints)
 
         self.window = False
 
@@ -34,20 +33,21 @@ class Main:
             if frame is not None:
                 if self.commander.box is not None:
                     frame = cv_to_pil(frame)
-                    frame = add_box_mask(frame, self.commander.box)
+                    frame = draw_box_mask(frame, self.commander.box)
                     frame = pil_to_cv(frame)
-                cv2.imshow('Mission-Center', frame)
+                cv2.imshow('Linger', frame)
             if cv2.waitKey(0) & 0xFF == ord('0'):
                 self.window = False
         cv2.destroyAllWindows()
 
-    async def moni_battery(self):
+    async def report_battery(self):
         async for b in self.drone.drone.telemetry.battery():
             print(b.remaining_percent)
             await asyncio.sleep(1)
 
     async def __call__(self):
         await self.drone.connect()
+        rep_bat = asyncio.create_task(self.report_battery())
 
         try:
             await self.drone.takeoff()
@@ -59,6 +59,6 @@ class Main:
 
 
 if __name__ == '__main__':
-    cfg.load('configurations/base.yaml')
+    cfg.load('config/default.yaml')
     main = Main()
     asyncio.run(main())
